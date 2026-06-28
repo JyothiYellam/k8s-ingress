@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+  labels:
+    project: roboshop
+    tier: frontend
+    component: app2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      project: roboshop
+      tier: frontend
+      component: app2
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        tier: frontend
+        component: app2
+    spec:
+      containers:
+        - name: app1
+          image: jyothi023/app2:1.0.0 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1
+spec:
+  selector: 
+    project: roboshop
+    tier: frontend
+    component: app2
+  ports: 
+   - protocol: TCP
+     port: 27017
+     targetPort: 27017
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app2
+spec:
+  selector: 
+    project: roboshop
+    tier: frontend
+    component: app2
+  ports: 
+   - protocol: TCP
+     port: 80 #service port
+     targetPort: 80 #container port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app2
+spec:
+  selector: 
+    project: roboshop
+    tier: frontend
+    component: app2
+  ports: 
+   - protocol: TCP
+     port: 80 #service port
+     targetPort: 80 #container port
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: 
+  name: ingress-wildcart-host
+  annotations:
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: 'arn:aws:acm:us-east-1:640083577458:certificate/8efd0b4e-e5b5-4981-a18d-b52d6ffc8d58'
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/tags: Environment=dev,Project=roboshop
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+   - host: "app2.jyothiy.online"
+     http: 
+       paths:
+        - pathType: Prefix
+          path: "/"
+          backend:
+            service:
+              name: app2
+              port:
+                number: 80
+  
